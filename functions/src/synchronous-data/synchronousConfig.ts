@@ -1,0 +1,2 @@
+export const storageDownloadUrl = 'https://firebasestorage.googleapis.com/v0/b/utliot-3a89b.appspot.com/o/';
+export const googleapisStorage = 'https://www.googleapis.com/storage/v1/b/utliot-3a89b.appspot.com/o/'
