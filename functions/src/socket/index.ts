@@ -7,11 +7,6 @@ import { createUTLRsaDevice, sendCommandToUTLDevice } from './../iot/iotService'
 import { controlDevice } from './../iot';
 import { iconUrl } from './../petacom/icon'
 
-const serviceAccount = require('./../serviceAccountKey.json');
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://utliot-3a89b.firebaseio.com"
-});
 const database = admin.firestore()
 
 const auth = admin.auth();

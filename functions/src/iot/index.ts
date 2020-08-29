@@ -502,8 +502,8 @@ export const savetaghistory = functions.firestore
         console.log('imformation didnt change')
         return 'imformation didnt change' };
     
-    await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY-MM-DD HH:mm:ss")).set(previousData)
-    await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY-MM-DD HH:mm:ss")).update(TIME)
+    await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY")).collection(time.format("MM-DD")).doc(time.format("HH:mm:ss")).set(previousData)
+    await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY")).collection(time.format("MM-DD")).doc(time.format("HH:mm:ss")).update(TIME)
     console.log('history save OK')
     return 'history save OK'
 })
