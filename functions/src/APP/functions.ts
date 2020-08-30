@@ -16,7 +16,7 @@ export const APPsocket = functions.https.onRequest((req: functions.Request, res:
     corsHandler(req, res, async () => {
         switch (req.method) {
             case "POST":
-                //create(req, res)
+                //test(req, res)
                 break
             case "GET":
                 break
@@ -60,4 +60,22 @@ const deleteDevice = async (req: functions.Request, res: functions.Response) =>{
         }
     })
   
+}
+const test = async (req: functions.Request, res: functions.Response) =>{
+    let ref = database.collection("personal-accounts").doc("ui9nr5vUoQPnQuPZj6sou7fSial2").collection("peoples")
+    ref.get().then((querySnapshot)=>{
+    console.log("準備進入一")
+       querySnapshot.forEach(async(doc)=>{
+           console.log("已經進入一")
+            let reportRef = ref.doc(doc.id).collection("healthyreport").doc("2020").collection("08-30")
+            await reportRef.get().then((reportSnapshot) => {
+                console.log("準備進入二")
+                reportSnapshot.forEach((report)=>{
+                    console.log("已經進入二")
+                    console.log(report)
+                })
+            })
+       })
+    })
+    return res.status(200).send("test send").end()
 }
