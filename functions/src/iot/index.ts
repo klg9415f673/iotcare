@@ -503,15 +503,9 @@ export const savetaghistory = functions.firestore
     if (currentData.physiological == previousData.physiological) { 
         console.log('imformation didnt change')
         return 'imformation didnt change' };
-<<<<<<< HEAD
     await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY")).set({}) //避免doc 不存在
     await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY")).collection(time.format("MM-DD")).doc(time.format("HH:mm:ss")).set(previousData)
     await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY")).collection(time.format("MM-DD")).doc(time.format("HH:mm:ss")).update(TIME)
-=======
-    
-    await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY-MM-DD/HH:mm:ss")).set(previousData)
-    await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY-MM-DD/HH:mm:ss")).update(TIME)
->>>>>>> 1663948... prepare to update
     console.log('history save OK')
     return 'history save OK'
 })
