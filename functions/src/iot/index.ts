@@ -503,7 +503,28 @@ export const savetaghistory = functions.firestore
     if (currentData.physiological == previousData.physiological) { 
         console.log('imformation didnt change')
         return 'imformation didnt change' };
-    await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY")).set({}) //避免doc 不存在
+    await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY")).set({},{merge:true}) //避免doc 不存在
+    await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY")).collection(time.format("MM-DD")).doc(time.format("HH:mm:ss")).set(previousData)
+    await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY")).collection(time.format("MM-DD")).doc(time.format("HH:mm:ss")).update(TIME)
+    console.log('history save OK')
+    return 'history save OK'
+})
+
+export const savealerthistory = functions.firestore
+    .document('personal-accounts/{accountID}/peoples/{tagMAC}')
+    .onUpdate(async (snapshot, context) => {
+    var nowDate = new Date();
+    var time = moment( nowDate ).tz("Asia/Taipei")
+    var t = time.format("YYYY-MM-DDTHH:mm:ss.SSSZ").split("+08:00")[0]+"Z"//轉換ISOstring 供網頁使用
+    var utct = moment().utc(nowDate).format("YYYY-MM-DDTHH:mm:ss.SSSZ").split("+00:00")[0]+"Z" //網頁需求
+    var TIME = {Time:t,
+                UTCTIME:utct } 
+    const previousData = snapshot.before.data();
+    const currentData = snapshot.after.data();
+    if (currentData.physiological == previousData.physiological) { 
+        console.log('imformation didnt change')
+        return 'imformation didnt change' };
+    await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY")).set({},{merge:true}) //避免doc 不存在
     await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY")).collection(time.format("MM-DD")).doc(time.format("HH:mm:ss")).set(previousData)
     await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY")).collection(time.format("MM-DD")).doc(time.format("HH:mm:ss")).update(TIME)
     console.log('history save OK')
