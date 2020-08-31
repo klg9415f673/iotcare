@@ -7,6 +7,7 @@ import { DistVincenty } from './../algorithm';
 import { iconUrl } from './../petacom/icon';
 
 import * as admin from 'firebase-admin';
+import { gamesManagement } from '../../node_modules/googleapis/build/src/apis/gamesManagement';
 const database = admin.firestore()
 
 const moment = require ('moment');
@@ -159,9 +160,44 @@ export const uploadBridge = functions.runWith({ memory: '2GB' }).pubsub.topic('U
             // }
             if (decodedData.device.thing.Status === "sitting") {
                 var sitbegintime = {sitbegintime:Date.now() }
-                await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address).set(sitbegintime,{merge:true})
+                await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address)
+                .set(sitbegintime,{merge:true})
+                await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address)
+                .update({timestamp:moment(Date()).tz("Asia/Taipei").format("YYYY-MM-DD HH:mm:ss.SSSSSS")})
+                await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address)
+                .get()
+                .then(async function(doc) {
+                    if(doc.data().thing.Status ==="standing"){
+                        var standbegintime = doc.data().standbegintime
+                        var standendtime = Date.now()
+                        var Standtime = standendtime - standbegintime 
+                        var timestamp = moment(standendtime).tz("Asia/Taipei").format("YYYY-MM-DDTHH:mm:ss.SSSZ")
+                        if(Standtime >= 60*60*1000 ){
+                            database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address).collection("alertreport").doc()
+                            .set({alert:"position",comment:"standing time"+ Standtime,timestamd:timestamp});
+                        }
+                    }
+                })
                
             }
+
+            if (decodedData.device.thing.Status === "walking") {
+                await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address)
+                .get()
+                .then(async function(doc) {
+                    if(doc.data().thing.Status ==="standing"){
+                        var standbegintime = doc.data().standbegintime
+                        var standendtime = Date.now()
+                        var Standtime = standendtime - standbegintime 
+                        var timestamp = moment(standendtime).tz("Asia/Taipei").format("YYYY-MM-DDTHH:mm:ss.SSSZ")
+                        if(Standtime >= 60*60*1000 ){
+                            database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address).collection("alertreport").doc()
+                            .set({alert:"position",comment:"standing time"+ Standtime,timestamd:timestamp});
+                        }
+                    }
+                })
+            }
+            
 
             if (decodedData.device.thing.Status === "falldown") {
                 decodedData.device.icon = iconUrl('穿戴式感測器 bTag', 'falldown');
@@ -177,7 +213,11 @@ export const uploadBridge = functions.runWith({ memory: '2GB' }).pubsub.topic('U
                 //await createInFirestoreTree(decodedData, { target: 'tagAndRecord' } as Target);
             }
             if (decodedData.device.thing.Status === "standing"){
-                
+                var standbegintime = {standbegintime:Date.now() }
+                await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address)
+                .set(standbegintime,{merge:true})
+                await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address)
+                .update({timestamp:moment(Date()).tz("Asia/Taipei").format("YYYY-MM-DD HH:mm:ss.SSSSSS")})
                 await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address)
                 .get()
                 .then(async function(doc) {
@@ -185,6 +225,11 @@ export const uploadBridge = functions.runWith({ memory: '2GB' }).pubsub.topic('U
                         var sitbegintime = doc.data().sitbegintime
                         var sitendtime = Date.now()
                         var Sittime = sitendtime - sitbegintime 
+                        var timestamp = moment(sitendtime).tz("Asia/Taipei").format("YYYY-MM-DDTHH:mm:ss.SSSZ")
+                        if(Sittime >= 60*60*1000 ){
+                            database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address).collection("alertreport").doc()
+                            .set({alert:"position",comment:"sitting time"+ Sittime,timestamd:timestamp});
+                        }
                         var totalSitTime = 0 
                         await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address)
                         .get()
@@ -216,9 +261,13 @@ export const uploadBridge = functions.runWith({ memory: '2GB' }).pubsub.topic('U
             const thing = messageBodydata.substr(38, 16);
             const healthydata = decodePhysiologicalThing(thing)
             console.log(healthydata)
+            if(healthydata.HR = 0){
+                return 0;
+            }
             await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").where("healthyMAC", "==" , decodedData.device.MAC_address)
             .get()
             .then(function(querySnapshot) {
+                
                 querySnapshot.forEach(function(doc) {
                      database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(doc.id).update({physiological:healthydata,timestamp:decodedData.device.timestamp})
                       });
@@ -513,22 +562,24 @@ export const savetaghistory = functions.firestore
 export const savealerthistory = functions.firestore
     .document('personal-accounts/{accountID}/peoples/{tagMAC}')
     .onUpdate(async (snapshot, context) => {
-    var nowDate = new Date();
-    var time = moment( nowDate ).tz("Asia/Taipei")
-    var t = time.format("YYYY-MM-DDTHH:mm:ss.SSSZ").split("+08:00")[0]+"Z"//轉換ISOstring 供網頁使用
-    var utct = moment().utc(nowDate).format("YYYY-MM-DDTHH:mm:ss.SSSZ").split("+00:00")[0]+"Z" //網頁需求
-    var TIME = {Time:t,
-                UTCTIME:utct } 
-    const previousData = snapshot.before.data();
+   
     const currentData = snapshot.after.data();
-    if (currentData.physiological == previousData.physiological) { 
-        console.log('imformation didnt change')
-        return 'imformation didnt change' };
-    await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY")).set({},{merge:true}) //避免doc 不存在
-    await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY")).collection(time.format("MM-DD")).doc(time.format("HH:mm:ss")).set(previousData)
-    await database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("healthyreport").doc(time.format("YYYY")).collection(time.format("MM-DD")).doc(time.format("HH:mm:ss")).update(TIME)
-    console.log('history save OK')
-    return 'history save OK'
+    var now = new Date();
+    var timestamp = moment(now).tz("Asia/Taipei").format("YYYY-MM-DDTHH:mm:ss.SSSZ") 
+    if(currentData.physiological.HR < 50 || currentData.physiological.HR > 100){
+        database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("alertreport").doc()
+        .set({alert:"physiological",comment:"Heart Rate"+currentData.physiological.HR,timestamd:timestamp});
+    }
+    if(currentData.physiological.Power < 20){
+        database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("alertreport").doc()
+        .set({alert:"power",comment:"Power"+currentData.physiological.Power,timestamd:timestamp});
+    }
+    if(currentData.physiological.TEMP < 35.0 || currentData.physiological.TEMP > 38.0){
+        database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("alertreport").doc()
+        .set({alert:"physiological",comment:"temperature"+currentData.physiological.TEMP,timestamd:timestamp});
+    }
+    console.log('alert trigger')
+    return 'alert trigger'
 })
 
 

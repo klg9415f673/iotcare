@@ -38,4 +38,5 @@ export const Hello = hello;
 export const updateAlldata = updateAllDate;
 
 export const APPsocket = appsocket.APPsocket; 
-export const Savetaghistory = iot.savetaghistory
+export const Savetaghistory = iot.savetaghistory;
+export const Savealerthistory = iot.savealerthistory;
