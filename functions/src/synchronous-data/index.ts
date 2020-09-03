@@ -8,6 +8,7 @@ import { googleapisStorage, storageDownloadUrl } from './synchronousConfig';
 export const createAccount = functions.runWith({ memory: '1GB'}).auth.user().onCreate(user => {
     const target = { target: 'personal-account' } as Target;
     return admin.auth().getUser(user.uid).then(userRecord => {
+        console.log(userRecord)
         const newAccount = {
             firebaseID: userRecord.uid,
             name: userRecord.displayName,

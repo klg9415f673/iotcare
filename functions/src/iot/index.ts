@@ -10,7 +10,7 @@ import * as admin from 'firebase-admin';
 import { gamesManagement } from '../../node_modules/googleapis/build/src/apis/gamesManagement';
 const database = admin.firestore()
 
-const moment = require ('moment');
+const moment = require('moment');
 const tz = require('moment-timezone');
 
 
@@ -246,11 +246,7 @@ export const uploadBridge = functions.runWith({ memory: '2GB' }).pubsub.topic('U
             //createInFirestoreTree(decodedData, { target: 'tagAndRecord' } as Target);
             // const tag = {
             //     from: decodedData.device.from,
-            //     MAC_address: decodedData.device.MAC_address,
-            //     thing: decodedData.device.thing,
-            //     timestamp:decodedData.device.timestamp,
-            //     icon:decodedData.device.icon
-            // } as Device
+            //     MAC_address: decodedData.device.MAC_address,20
        
             await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address).set(decodedData.device,{merge:true})
             // var payload = { tag: tag };
@@ -261,20 +257,18 @@ export const uploadBridge = functions.runWith({ memory: '2GB' }).pubsub.topic('U
             const thing = messageBodydata.substr(38, 16);
             const healthydata = decodePhysiologicalThing(thing)
             console.log(healthydata)
-            if(healthydata.HR = 0){
-                return 0;
-            }
             await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").where("healthyMAC", "==" , decodedData.device.MAC_address)
             .get()
             .then(function(querySnapshot) {
                 
                 querySnapshot.forEach(function(doc) {
-                     database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(doc.id).update({physiological:healthydata,timestamp:decodedData.device.timestamp})
-                      });
+                    database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(doc.id).update({physiological:healthydata,timestamp:decodedData.device.timestamp})
+                    });
             })
             .catch(function(error) {
                 console.log("Error getting documents: ", error);
             });
+            
         }
 
     } else { // 其他為固定式:磁簧開關、坐墊、踏墊、node、router  、溫溼度 
@@ -566,7 +560,7 @@ export const savealerthistory = functions.firestore
     const currentData = snapshot.after.data();
     var now = new Date();
     var timestamp = moment(now).tz("Asia/Taipei").format("YYYY-MM-DDTHH:mm:ss.SSSZ") 
-    if(currentData.physiological.HR < 50 || currentData.physiological.HR > 100){
+    if(currentData.physiological.HR < 50 || currentData.physiological.HR > 90){
         database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("alertreport").doc()
         .set({alert:"physiological",comment:"Heart Rate"+currentData.physiological.HR,timestamd:timestamp});
     }
