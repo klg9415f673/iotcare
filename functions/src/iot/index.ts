@@ -238,7 +238,8 @@ export const uploadBridge = functions.runWith({ memory: '2GB' }).pubsub.topic('U
                             totalSitTime = totalSitTime + Sittime
                           })
                         var  totalSitTimer = {totalSitTimer:totalSitTime }
-                        await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address).set(totalSitTimer,{merge:true})
+                        await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address)
+                        .set(totalSitTimer,{merge:true})
                     }
                     
                 })
@@ -248,7 +249,10 @@ export const uploadBridge = functions.runWith({ memory: '2GB' }).pubsub.topic('U
             //     from: decodedData.device.from,
             //     MAC_address: decodedData.device.MAC_address,20
        
-            await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address).set(decodedData.device,{merge:true})
+            await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address)
+            .set(decodedData.device,{merge:true})
+            await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address)
+            .set({device:"amulet"},{merge:true})
             // var payload = { tag: tag };
             // await updateInFirestoreTree(payload, { target: 'tag' } as Target)
         }//修改-
@@ -256,18 +260,23 @@ export const uploadBridge = functions.runWith({ memory: '2GB' }).pubsub.topic('U
             console.log('可攜式感測器 bTag')
             const thing = messageBodydata.substr(38, 16);
             const healthydata = decodePhysiologicalThing(thing)
-            console.log(healthydata)
-            await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").where("healthyMAC", "==" , decodedData.device.MAC_address)
-            .get()
-            .then(function(querySnapshot) {
+            // await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").where("healthyMAC", "==" , decodedData.device.MAC_address)
+            // .get()
+            // .then(function(querySnapshot) {
                 
-                querySnapshot.forEach(function(doc) {
-                    database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(doc.id).update({physiological:healthydata,timestamp:decodedData.device.timestamp})
-                    });
-            })
+            //     querySnapshot.forEach(function(doc) {
+            //         database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(doc.id).update({physiological:healthydata,timestamp:decodedData.device.timestamp})
+            //         });
+            // })
+            // .catch(function(error) {
+            //     console.log("Error getting documents: ", error);
+            // }); 生理資訊手環綁定護身符方案
+            await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address)
+            .set({device:"bracelet",physiological:healthydata,name:""},{merge:true})
             .catch(function(error) {
-                console.log("Error getting documents: ", error);
-            });
+                console.log("Error getting documents: ", error);}) 
+            await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address)
+            .set(decodedData.device,{merge:true})//生理資訊手環與護身符分離
             
         }
 
