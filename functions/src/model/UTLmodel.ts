@@ -19,6 +19,7 @@ export class Location {
 export class Floor {
     imageUrl?: string;                                       // 從 storage 取得的 url
     floor?: string;                                          // 樓層
+    angle?:string;
     upperLeft?: {
         longitude: number;
         latitude: number;

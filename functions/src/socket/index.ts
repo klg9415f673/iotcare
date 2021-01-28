@@ -249,8 +249,8 @@ const deletefloor = (account: Account, req: functions.Request, res: functions.Re
 const createDevice = (account: Account, req: functions.Request, res: functions.Response, requestTimestamp: string) => {
     if (createAllow(account)) {
         const device = req.body.device as Device;
-        console.log(req.body)
-        if (device.status !== '離線') { res.status(417).send('not allowed') };
+        //console.log("裝置狀態非離線");res.status(417).send('not allowed'); 
+   
         device.icon = iconUrl(device.type, device.status);
         device.requestArrivedTime = requestTimestamp;
         const target = { target: req.body.target } as Target;
@@ -258,7 +258,12 @@ const createDevice = (account: Account, req: functions.Request, res: functions.R
         
         createInFirestoreTree(payload, target)
             .then(() => res.status(200).send({ message: "OK"}))
-            .catch(error => res.status(417).send(error));
+            .catch(error => {   
+                console.log(error)
+                res.status(417).send(error)}
+                    );
+    
+    
     } else res.status(403).end();
 }
 

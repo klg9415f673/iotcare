@@ -23,7 +23,9 @@ const getHeaders = async (target) => {
 
 export const createInFirestoreTree = async (payload: Object, target: Target): Promise<AxiosResponse<any>> => {
     const headers = await getHeaders(target);
+    console.log(headers)
     const bodyToken = await bodySign(payload);
+    console.log(bodyToken)
     const result = await axios.post(modelServiceUrl, { bodyToken }, { headers });
     return result;
 }

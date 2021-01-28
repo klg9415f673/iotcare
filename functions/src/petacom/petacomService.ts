@@ -532,6 +532,7 @@ export const decodePetacomFormat = (packet: string) => {
     const timestamp = packet.substr(148, 26);
 
     const petacom = decodeFormat(mode, thing, time) as Petacom
+    if(petacom.deviceMac ===undefined){petacom.deviceMac = macAddress}
     const from = {
         firebaseID: firebaseID,
         locationID: locationID,
