@@ -160,6 +160,13 @@ export class Device {
         humidity?: number;
         Status?:string;
     }
+    sensor_parameter?:{
+        attached_item?:string;
+        sensor_type?:string;
+        sensor_SN?:string;
+        temperature?: number;
+        humidity?: number;
+    }
 }
 
 export class Petacom {

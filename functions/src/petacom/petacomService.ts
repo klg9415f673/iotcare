@@ -1,5 +1,5 @@
 import { FireSensorStatus, FireSensor, Petacom, PressureSensor, DeviceRecord, ReedSwitch, ProximitySensor, From, Device, CoherenceItem } from "./../model/UTLmodel";
-
+import {hex2Decimal} from "./../transform" ;
 const getBinaryString = (string: string) => {
     let result = '';
     const stringArray = string.split('');
@@ -426,91 +426,182 @@ const decodeFormat = (mode: string, thing: string, time: string) => {
     let direction: string;
     let events: string;
     let deviceMac: string;
-    switch (modeBinaryString.substr(2, 2)) {
-        case '00':
-            direction = '非緊急上傳';
-            switch (modeBinaryString.substr(4, 4)) {
-                case '0000': events = 'bNode報平安'; break;
-                case '0001': events = 'Router報平安'; break;
-                case '0010': events = '非穿戴感測器報平安';   //溫濕度
-
+    switch(master){
+        case '人': 
+            switch (modeBinaryString.substr(2, 2)) {
+                case '00':
+                    direction = '非緊急上傳';
+                    switch (modeBinaryString.substr(4, 4)) {
+                        case '0000': events = 'bNode報平安'; break;
+                        case '0001': events = 'Router報平安'; break;
+                        case '0010': events = '非穿戴感測器報平安';   //溫濕度
+        
+                            break;
+                        case '0011': events = ''; break;              // bNode + 感測器 ？
+                        case '0100': //手環定位
+                            events = '穿戴式感測器 bTag';
+        
+                            break;
+                        case '0101': events = '可攜式感測器 bTag'; ; break; // 會夾帶device的MAC 護身符
+                        case '0110': events = '近接式感測器 bTag'; break;     //生理資訊手環
+                        case '0111': events = '上傳阻礙'; break;              // 上傳阻礙？
+                        case '1000': //手還發出
+                            events = '人與物相遇 bTag';
+                            deviceMac = getPassiveDevice(thingBinaryString);
+        
+                            break;
+                        case '1001': events = '兩人相遇'; deviceMac = getPassiveDevice(thingBinaryString); break;              // 會夾帶device的MAC
+                        case '1010': events = '兩物相遇'; deviceMac = getPassiveDevice(thingBinaryString); break;              // 會夾帶device的MAC
+                        case '1011': events = '物與人相遇'; deviceMac = getPassiveDevice(thingBinaryString); break;              // 會夾帶device的MAC
+                        case '1100': events = '兩人以上相遇'; break;
+                        case '1101': events = '兩物以上相遇'; break;
+                        case '1110': // 固定式感測器發出
+                            events = '人與物相遇';
+        
+                            break;
+                        case '1111': events = '人與物相遇，物品位置受更動，須校正'; break; // App設定後由device送出
+                    }
                     break;
-                case '0011': events = '待訂'; break;              // bNode + 感測器 ？
-                case '0100': //手環定位
-                    events = '穿戴式感測器 bTag';
-
+        
+                case '01':
+                    direction = '緊急上傳';
+                    switch (modeBinaryString.substr(4, 4)) {
+                        case '0000': events = 'bTag產生異常感測值'; break;
+                        case '0001': events = 'bNode產生異常感測值'; break;
+                        case '0010': events = '穿戴式裝置緊急按鈕'; break;
+                        case '0011': events = '手機緊急按鈕'; break;
+                        case '0100': events = '感測器電量不足'; break;                 // bTag 感測器電量不足（包含近接式以及接觸式）
+                        case '0101': events = '穿戴式裝置bTag電量不足'; break;                // 穿戴式裝置電量不足
+                        case '0110': events = '消防感測器'; break;
+                        case '0111': events = 'undefined'; break;
+                    }
                     break;
-                case '0101': events = '可攜式感測器 bTag'; ; break; // 會夾帶device的MAC 護身符
-                case '0110': events = '近接式感測器 bTag'; break;     //生理資訊手環
-                case '0111': events = '上傳阻礙'; break;              // 上傳阻礙？
-                case '1000': //手還發出
-                    events = '人與物相遇 bTag';
-                    deviceMac = getPassiveDevice(thingBinaryString);
-
+        
+                case '10':
+                    direction = '非緊急下載';
+                    switch (modeBinaryString.substr(4, 4)) {
+                        case '0000': events = 'Mesh/router 設定'; break;
+                        case '0001': events = 'bNode 時間同步'; break;
+                        case '0010': events = 'Router 時間同步'; break;
+                        case '0011': events = '通報資料傳送至行動裝置'; break;
+                        case '0100': events = '控制資料由 bNode 到 bwRouter'; break;
+                        case '0101': events = '更新資料經 bwRouter 去 OAD'; break;
+                        case '0110': events = '控制資料傳送至 Node or bTag'; break;
+                        case '0111': events = '下載阻礙'; break;      // 存在的必要性？            
+                        case '1000': events = '手機或手環對 Node or bTag 遙控'; break;
+                        case '1001': events = '手機或手環對 Node or bTag 傳送資料'; break;
+                        case '1010': events = 'Node 對外傳送自身訊息'; break;
+                        case '1011': events = 'Tag 與 Tag 互傳訊息'; break;
+                        case '1100': events = '尋人啟事'; break;
+                        case '1101': events = '尋人啟事啟動或清除'; break;
+                        case '1110': events = '尋物啟事'; break;
+                        case '1111': events = '尋物啟事啟動或清除'; break;
+                    }
                     break;
-                case '1001': events = '兩人相遇'; deviceMac = getPassiveDevice(thingBinaryString); break;              // 會夾帶device的MAC
-                case '1010': events = '兩物相遇'; deviceMac = getPassiveDevice(thingBinaryString); break;              // 會夾帶device的MAC
-                case '1011': events = '物與人相遇'; deviceMac = getPassiveDevice(thingBinaryString); break;              // 會夾帶device的MAC
-                case '1100': events = '兩人以上相遇'; break;
-                case '1101': events = '兩物以上相遇'; break;
-                case '1110': // 固定式感測器發出
-                    events = '人與物相遇';
-
+        
+                case '11':
+                    direction = '緊急下載';
+                    switch (modeBinaryString.substr(4, 4)) {
+                        case '0000': events = '致動器bTag緊急啟動'; break;
+                        case '0001': events = 'bNode 致動器緊急啟動'; break;
+                        case '0010': events = '消防系統緊急啟動'; break;
+                        case '0011': events = '機器人緊急啟動'; break;
+                        case '0100': events = '電梯關閉'; break;     // 地震 火災               
+                        default: events = 'undefined'; break;
+                    }
                     break;
-                case '1111': events = '人與物相遇，物品位置受更動，須校正'; break; // App設定後由device送出
             }
-            break;
+        break;
+        case '動物': break;
+        case '移動載具': break;
+        case '非穿戴式': //就是""物""啦!!!垃圾東西
+            switch (modeBinaryString.substr(2, 2)) {
+                case '00':
+                    direction = '非緊急上傳';
+                    switch (modeBinaryString.substr(4, 4)) {
+                        case '0000': events = '保留'; break;
+                        case '0001': events = '照度/環境光感測器'; break;
+                        case '0010': events = '濕度感測器'; break;
+                        case '0011': events = '溫度感測器'; break;             
+                        case '0100': events = '溫濕度感測器'; break;
+                        case '0101': events = '消防感測器'; break; 
+                        case '0110': events = '氣壓感測/氣流/風向感測器'; break;     
+                        case '0111': events = '空氣品質感測器'; break;              
+                        case '1000': events = '黴菌感測器'; break;
+                        case '1001': events = '病菌感測器'; break;              
+                        case '1010': events = '病毒感測器'; break;             
+                        case '1011': events = '氣體感測器'; break;             
+                        case '1100': events = '水質感測器'; break;
+                        case '1101': events = '噪音感測器'; break;
+                        case '1110': events = '保留'; break;
+                        case '1111': events = '保留'; break; 
+                    }
+                    break;
+        
+                case '01':
+                    direction = '緊急上傳';
+                    switch (modeBinaryString.substr(4, 4)) {
+                        case '0000': events = ''; break;
+                        case '0001': events = ''; break;
+                        case '0010': events = ''; break;
+                        case '0011': events = ''; break;
+                        case '0100': events = ''; break;                
+                        case '0101': events = ''; break;             
+                        case '0110': events = ''; break;
+                        case '0111': events = ''; break;
+                    }
+                    break;
+        
+                case '10':
+                    direction = '非緊急下載';
+                    switch (modeBinaryString.substr(4, 4)) {
+                        case '0000': events = ''; break;
+                        case '0001': events = ''; break;
+                        case '0010': events = ''; break;
+                        case '0011': events = ''; break;
+                        case '0100': events = ''; break;
+                        case '0101': events = ''; break;
+                        case '0110': events = ''; break;
+                        case '0111': events = ''; break;              
+                        case '1000': events = ''; break;
+                        case '1001': events = ''; break;
+                        case '1010': events = ''; break;
+                        case '1011': events = ''; break;
+                        case '1100': events = ''; break;
+                        case '1101': events = ''; break;
+                        case '1110': events = ''; break;
+                        case '1111': events = ''; break;
+                    }
+                    break;
+        
+                case '11':
+                    direction = '緊急下載';
+                    switch (modeBinaryString.substr(4, 4)) {
+                        case '0000': events = ''; break;
+                        case '0001': events = ''; break;
+                        case '0010': events = ''; break;
+                        case '0011': events = ''; break;
+                        case '0100': events = ''; break;
+                    }
+                    break;
+            }
+        break;
 
-        case '01':
-            direction = '緊急上傳';
-            switch (modeBinaryString.substr(4, 4)) {
-                case '0000': events = 'bTag產生異常感測值'; break;
-                case '0001': events = 'bNode產生異常感測值'; break;
-                case '0010': events = '穿戴式裝置緊急按鈕'; break;
-                case '0011': events = '手機緊急按鈕'; break;
-                case '0100': events = '感測器電量不足'; break;                 // bTag 感測器電量不足（包含近接式以及接觸式）
-                case '0101': events = '穿戴式裝置bTag電量不足'; break;                // 穿戴式裝置電量不足
-                case '0110': events = '消防感測器'; break;
-                case '0111': events = 'undefined'; break;
-            }
-            break;
-
-        case '10':
-            direction = '非緊急下載';
-            switch (modeBinaryString.substr(4, 4)) {
-                case '0000': events = 'Mesh/router 設定'; break;
-                case '0001': events = 'bNode 時間同步'; break;
-                case '0010': events = 'Router 時間同步'; break;
-                case '0011': events = '通報資料傳送至行動裝置'; break;
-                case '0100': events = '控制資料由 bNode 到 bwRouter'; break;
-                case '0101': events = '更新資料經 bwRouter 去 OAD'; break;
-                case '0110': events = '控制資料傳送至 Node or bTag'; break;
-                case '0111': events = '下載阻礙'; break;      // 存在的必要性？            
-                case '1000': events = '手機或手環對 Node or bTag 遙控'; break;
-                case '1001': events = '手機或手環對 Node or bTag 傳送資料'; break;
-                case '1010': events = 'Node 對外傳送自身訊息'; break;
-                case '1011': events = 'Tag 與 Tag 互傳訊息'; break;
-                case '1100': events = '尋人啟事'; break;
-                case '1101': events = '尋人啟事啟動或清除'; break;
-                case '1110': events = '尋物啟事'; break;
-                case '1111': events = '尋物啟事啟動或清除'; break;
-            }
-            break;
-
-        case '11':
-            direction = '緊急下載';
-            switch (modeBinaryString.substr(4, 4)) {
-                case '0000': events = '致動器bTag緊急啟動'; break;
-                case '0001': events = 'bNode 致動器緊急啟動'; break;
-                case '0010': events = '消防系統緊急啟動'; break;
-                case '0011': events = '機器人緊急啟動'; break;
-                case '0100': events = '電梯關閉'; break;     // 地震 火災               
-                default: events = 'undefined'; break;
-            }
-            break;
     }
+   
     return { master, direction, events, deviceMac, time, status };
 }
+const decode_sensor = (thing: string) => {
+    
+    var attached_item = thing.substr(0, 2);
+    var sensor_type = thing.substr(2, 2);
+    var sensor_SN = thing.substr(4, 2);
+    var temperature = Number(hex2Decimal(thing.substr(6, 4)))/100;
+    var humidity = Number(hex2Decimal(thing.substr(10, 4)))/100;
+
+    return{attached_item, sensor_type, sensor_SN, temperature, humidity}
+}
+
 // mode macaddress  time longitude  latitude        thing          hopping            firebaseID               locationID            floorID          routerID           timestamp
 //  3       12        4     10          9             16             14                    28                      20                    20              12                     26
 // $04 A0E6F834602D 0000 121.535840 25.042635 0000000000000000 89593827390703 28BYBbJzIRWHxYIKfkpAaIPbjDd2 teAESXu89GYtdZQzwV9X 29zxilzYLjpZzL6ChWyi 546C0EA502D7 2019-01-15 18:51:14.419046
@@ -552,7 +643,18 @@ export const decodePetacomFormat = (packet: string) => {
             timestamp: timestamp,
             tagVisible: true
         } as Device;
-    } else {                                // 固定式裝置
+    }else if(petacom.events.search('感測器') !== -1){ //物的感測器
+        const sensor_parameter = decode_sensor(thing)
+        device = {
+            MAC_address: macAddress,
+            sensor_parameter:sensor_parameter,
+            from: from,
+            petacom: petacom,
+            hopping: hopping,
+            timestamp: timestamp,
+            type:petacom.events,
+        } as Device;
+    }else {                                // 固定式裝置
         device = {
             MAC_address: macAddress,
             from: from,
