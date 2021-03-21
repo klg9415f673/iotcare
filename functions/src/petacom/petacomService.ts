@@ -521,9 +521,9 @@ const decodeFormat = (mode: string, thing: string, time: string) => {
                     switch (modeBinaryString.substr(4, 4)) {
                         case '0000': events = '保留'; break;
                         case '0001': events = '照度/環境光感測器'; break;
-                        case '0010': events = '濕度感測器'; break;
-                        case '0011': events = '溫度感測器'; break;             
-                        case '0100': events = '溫濕度感測器'; break;
+                        case '0010': events = '溫度感測器'; break;
+                        case '0011': events = '溫濕度感測器'; break;   //原濕度          
+                        case '0100': events = '濕度感測器'; break;     //原溫濕度
                         case '0101': events = '消防感測器'; break; 
                         case '0110': events = '氣壓感測/氣流/風向感測器'; break;     
                         case '0111': events = '空氣品質感測器'; break;              
