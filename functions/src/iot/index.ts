@@ -361,7 +361,7 @@ export const uploadBridge = functions.runWith({ memory: '2GB' }).pubsub.topic('U
             console.log("updateInFirestoreTree, target: device, payload: ", payload)
             await updateInFirestoreTree(payload, { target: "device" } as Target)
         break;
-        case"溫度感測器":
+        case"溫濕度感測器":
             await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("locations").doc(decodedData.device.from.locationID)
             .collection("floors").doc(decodedData.device.from.floorID).collection("devices").doc(decodedData.device.MAC_address)
             .set(decodedData.device,{merge:true})

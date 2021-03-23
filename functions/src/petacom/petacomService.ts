@@ -596,8 +596,11 @@ const decode_sensor = (thing: string) => {
     var attached_item = thing.substr(0, 2);
     var sensor_type = thing.substr(2, 2);
     var sensor_SN = thing.substr(4, 2);
-    var temperature = Number(hex2Decimal(thing.substr(6, 4)))/100;
-    var humidity = Number(hex2Decimal(thing.substr(10, 4)))/100;
+
+    var humidity_0 = hex2Decimal(thing.substr(6, 4))
+    var temperature_0 = hex2Decimal(thing.substr(10, 4))
+    var humidity = Number(`${humidity_0.substr(0,2)}.${humidity_0.substr(2,3)}`); 
+    var temperature = Number(`${temperature_0.substr(0,2)}.${temperature_0.substr(2,3)}`);
 
     return{attached_item, sensor_type, sensor_SN, temperature, humidity}
 }
@@ -653,6 +656,7 @@ export const decodePetacomFormat = (packet: string) => {
             hopping: hopping,
             timestamp: timestamp,
             type:petacom.events,
+            status:petacom.status,
         } as Device;
     }else {                                // 固定式裝置
         device = {
