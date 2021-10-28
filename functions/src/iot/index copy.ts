@@ -179,41 +179,125 @@ export const uploadBridge = functions.runWith({ memory: '2GB' }).pubsub.topic('U
                     { target: 'people' } as Target);
             break;
             case '穿戴式感測器 bTag'://修改
-            console.log('穿戴式感測器 bTag')
-            decodedData.device.icon = iconUrl('穿戴式感測器 bTag', decodedData.device.petacom.status);
-            // await createInFirestoreTree(decodedData, { target: 'tagAndRecord' } as Target);
-
-            decodedData.device.thing = decodeTagThing(messageBodydata)
-            console.log(decodedData.device.thing)
-
-
-            if (decodedData.device.thing.noMove) {
-                decodedData.device.icon = iconUrl('穿戴式感測器 bTag', '無移動');
+                console.log('穿戴式感測器 bTag')
+                decodedData.device.icon = iconUrl('穿戴式感測器 bTag', decodedData.device.petacom.status);
                 // await createInFirestoreTree(decodedData, { target: 'tagAndRecord' } as Target);
-            }
+
+                decodedData.device.thing = decodeTagThing(messageBodydata)
+                decodedData.device.petacom.deviceMac = decodedData.device.MAC_address
+            
 
 
-            if (decodedData.device.thing.falldown) {
-                decodedData.device.icon = iconUrl('穿戴式感測器 bTag', 'falldown');
+                // if (decodedData.device.thing.noMove) {
+                //     decodedData.device.icon = iconUrl('穿戴式感測器 bTag', '無移動');
+                //     // await createInFirestoreTree(decodedData, { target: 'tagAndRecord' } as Target);
+                // }
+                switch(decodedData.device.thing.Status){
+                    case "sitting":
+                        var sitbegintime = {sitbegintime:Date.now() }
+                        await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address)
+                        .set(sitbegintime,{merge:true})
+                        await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address)
+                        .update({timestamp:moment(Date()).tz("Asia/Taipei").format("YYYY-MM-DD HH:mm:ss.SSSSSS")})
+                        await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address)
+                        .set(sitbegintime,{merge:true})
+                        await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address)
+                        .update({timestamp:moment(Date()).tz("Asia/Taipei").format("YYYY-MM-DD HH:mm:ss.SSSSSS")})
+                        await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address)
+                        .get()
+                        .then(async function(doc) {
+                            if(doc.data().thing.Status ==="standing"){
+                                var standbegintime = doc.data().standbegintime
+                                var standendtime = Date.now()
+                                var Standtime = standendtime - standbegintime 
+                                var timestamp = moment(standendtime).tz("Asia/Taipei").format("YYYY-MM-DDTHH:mm:ss.SSSZ")
+                                if(Standtime >= 60*60*1000 ){
+                                    database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address).collection("alertreport").doc()
+                                    .set({alert:"position",comment:"standing time"+ Standtime,timestamd:timestamp});
+                                }
+                            }
+                        })
+                    break;
+                    case "walking":
+                        await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address)
+                        .get()
+                        .then(async function(doc) {
+                            if(doc.data().thing.Status ==="standing"){
+                                var standbegintime = doc.data().standbegintime
+                                var standendtime = Date.now()
+                                var Standtime = standendtime - standbegintime 
+                                var timestamp = moment(standendtime).tz("Asia/Taipei").format("YYYY-MM-DDTHH:mm:ss.SSSZ")
+                                if(Standtime >= 60*60*1000 ){
+                                    database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address).collection("alertreport").doc()
+                                    .set({alert:"position",comment:"standing time"+ Standtime,timestamd:timestamp});
+                                }
+                            }
+                        })
+                    
+                    break;
+                    case "falldown":
+                        decodedData.device.icon = iconUrl('穿戴式感測器 bTag', 'falldown');
+                        
+                        // if (decodedData.device.thing.falldownStatus) {
+                        //     const peopleResult = await getInFirestoreTree({ firebaseID: decodedData.device.from.firebaseID, tagID: decodedData.device.MAC_address },//router的firebaseID、tag的mac
+                        //         { target: 'people' } as Target);  // 人 (不同於 tag)
+                        //     const people = peopleResult.data.people as People;
+                        //     people.falldownNumber++;
+                        //     await updateInFirestoreTree({ firebaseID: decodedData.device.from.firebaseID, people: people }, { target: 'people' } as Target);
+                        // }
 
-                if (decodedData.device.thing.falldownStatus) {
-                    const peopleResult = await getInFirestoreTree({ firebaseID: decodedData.device.from.firebaseID, tagID: decodedData.device.MAC_address },//router的firebaseID、tag的mac
-                        { target: 'people' } as Target);  // 人 (不同於 tag)
-                    const people = peopleResult.data.people as People;
-                    people.falldownNumber++;
-                    await updateInFirestoreTree({ firebaseID: decodedData.device.from.firebaseID, people: people }, { target: 'people' } as Target);
+                        //await createInFirestoreTree(decodedData, { target: 'tagAndRecord' } as Target);
+                    break;
+                    case "standing":
+                        var standbegintime = {standbegintime:Date.now() }
+                        await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address)
+                        .set(standbegintime,{merge:true})
+                        await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address)
+                        .update({timestamp:moment(Date()).tz("Asia/Taipei").format("YYYY-MM-DD HH:mm:ss.SSSSSS")})
+                        await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address)
+                        .set(standbegintime,{merge:true})
+                        await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address)
+                        .update({timestamp:moment(Date()).tz("Asia/Taipei").format("YYYY-MM-DD HH:mm:ss.SSSSSS")})
+                        await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address)
+                        .get()
+                        .then(async function(doc) {
+                            if(doc.data().thing.Status ==="sitting"){
+                                var sitbegintime = doc.data().sitbegintime
+                                var sitendtime = Date.now()
+                                var Sittime = sitendtime - sitbegintime 
+                                var timestamp = moment(sitendtime).tz("Asia/Taipei").format("YYYY-MM-DDTHH:mm:ss.SSSZ")
+                                if(Sittime >= 60*60*1000 ){
+                                    database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address).collection("alertreport").doc()
+                                    .set({alert:"position",comment:"sitting time"+ Sittime,timestamd:timestamp});
+                                }
+                                var totalSitTime = 0 
+                                await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address)
+                                .get()
+                                .then(function(document) {  
+                                    totalSitTime = document.data().totalSitTimer 
+                                    totalSitTime = totalSitTime + Sittime
+                                })
+                                var  totalSitTimer = {totalSitTimer:totalSitTime }
+                                await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address)
+                                .set(totalSitTimer,{merge:true})
+                            }
+                            
+                        })
+                    break;
                 }
-
-                // await createInFirestoreTree(decodedData, { target: 'tagAndRecord' } as Target);
-            }
-            createInFirestoreTree(decodedData, { target: 'tagAndRecord' } as Target);
-            // const tag = {
-            //     from: decodedData.device.from,
-            //     MAC_address: decodedData.device.MAC_address,
-            //     thing: decodedData.device.thing
-            // } as Device
-            // var payload = { tag: tag };
-            // await updateInFirestoreTree(payload, { target: 'tag' } as Target)
+                //createInFirestoreTree(decodedData, { target: 'tagAndRecord' } as Target);
+                // const tag = {
+                //     from: decodedData.device.from,
+                //     MAC_address: decodedData.device.MAC_address,20
+        
+                await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("mobile-tags").doc(decodedData.device.MAC_address)
+                .set(decodedData.device,{merge:true})
+                await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address)
+                .set(decodedData.device,{merge:true})
+                await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("peoples").doc(decodedData.device.MAC_address)
+                .set({device:"amulet"},{merge:true})
+                // var payload = { tag: tag };
+                // await updateInFirestoreTree(payload, { target: 'tag' } as Target)
             //修改-
             break;
             case '可攜式感測器 bTag'://生理資訊手環
@@ -278,7 +362,7 @@ export const uploadBridge = functions.runWith({ memory: '2GB' }).pubsub.topic('U
             await updateInFirestoreTree(payload, { target: "device" } as Target)
         break;
         case"溫濕度感測器":
-            decodedData.device.icon = iconUrl(decodedData.device.petacom.events, decodedData.device.status)
+        decodedData.device.icon = iconUrl(decodedData.device.petacom.events, decodedData.device.status)
             await database.collection("personal-accounts").doc(decodedData.device.from.firebaseID).collection("locations").doc(decodedData.device.from.locationID)
             .collection("floors").doc(decodedData.device.from.floorID).collection("devices").doc(decodedData.device.MAC_address)
             .set(decodedData.device,{merge:true})
@@ -535,31 +619,19 @@ export const savealerthistory = functions.firestore
     .onUpdate(async (snapshot, context) => {
    
     const currentData = snapshot.after.data();
-    var timestamp = moment().tz("Asia/Taipei").format("YYYY-MM-DDTHH:mm:ss.SSSZ") 
-    var year = moment().tz("Asia/Taipei").format("YYYY")
-    var date = moment().tz("Asia/Taipei").format("MM-DD")
-    var time = moment().tz("Asia/Taipei").format("HH:mm:ss")
-
+    var now = new Date();
+    var timestamp = moment(now).tz("Asia/Taipei").format("YYYY-MM-DDTHH:mm:ss.SSSZ") 
     if(currentData.physiological.HR < 50 || currentData.physiological.HR > 90){
-        database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("alertreport").doc(year)
-        .set({year:year})
-
-        database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("alertreport").doc(year)
-        .collection(`alert${date}`).doc(time)
-        .set({alert:"physiological",heartRate:currentData.physiological.HR,timestamp:timestamp});
+        database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("alertreport").doc()
+        .set({alert:"physiological",comment:"Heart Rate"+currentData.physiological.HR,timestamd:timestamp});
     }
-    // if(currentData.physiological.Power < 20){
-    //     database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("alertreport").doc()
-    //     .set({alert:"power",comment:"Power"+currentData.physiological.Power,timestamp:timestamp});
-    // }
+    if(currentData.physiological.Power < 20){
+        database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("alertreport").doc()
+        .set({alert:"power",comment:"Power"+currentData.physiological.Power,timestamd:timestamp});
+    }
     if(currentData.physiological.TEMP < 35.0 || currentData.physiological.TEMP > 38.0){
-
-        database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("alertreport").doc(year)
-        .set({time:time})
-
-        database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("alertreport").doc(year)
-        .collection(`alert${date}`).doc(time)
-        .set({alert:"physiological",temperature:currentData.physiological.TEMP,timestamp:timestamp});
+        database.collection("personal-accounts").doc(context.params.accountID).collection("peoples").doc(context.params.tagMAC).collection("alertreport").doc()
+        .set({alert:"physiological",comment:"temperature"+currentData.physiological.TEMP,timestamd:timestamp});
     }
     console.log('alert trigger')
     return 'alert trigger'
@@ -567,48 +639,5 @@ export const savealerthistory = functions.firestore
 
 
 // ------------------------
-
-
-export const linenotify  = functions.firestore.document('personal-accounts/{accountID}/peoples/{peopleID}')
-    .onUpdate(async (change, context) => {
-    const linebot = require('linebot');
-    const bot = linebot({
-        channelId: '1656421497',
-        channelSecret: '72348166890da7f81ee297f147a3db26',
-        channelAccessToken: 'GAm5eXugU+Ia1GcMUpYPUTLm+XqimZtkicG5CVOwrqWz682tESq4GUr5QNgJElhTkzNpucEEIA9a+9W81bx74mLvE0GPkTWLoY2P+O6LYWkgUuBWBGzYj3+2WLKWqGWPAYhTWxWcUvhtBy3UdMixBwdB04t89/1O/w1cDnyilFU='
-    });  
-    
-    const lineID = "U9d53f35c8430d27f9b55e8e09cf836e9" //傳宗LINE ID
-    var latest= change.after.data();
-    if(latest.device ==="amulet"){
-        switch(latest.thing.Status){
-            case "fallAlert":
-                var msg = `緊急警告:${latest.name}，跌倒後未回應!${latest.MAC_address}`
-                bot.push(lineID, [
-                    {
-                        type:'text',
-                        text:msg
-                    },               
-                
-                    ]).catch(err=>console.log("linbot push error:",err));
-                break;
-            case "cancelFallAlery":
-                var msg = `警告解除:${latest.name}，透過照護助理解決跌倒誤報`
-                bot.push(lineID, [
-                    {
-                        type:'text',
-                        text:msg
-                    },               
-                
-                    ]).catch(err=>console.log("linbot push error:",err));
-                
-                    break;
-    
-        }
-
-    }
-  
-     
-})
 
 

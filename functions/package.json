@@ -22,6 +22,7 @@
     "firebase-functions": "^3.0.1",
     "googleapis": "^39.2.0",
     "jsonwebtoken": "^8.5.1",
+    "linebot": "^1.6.1",
     "moment": "^2.27.0",
     "moment-timezone": "^0.5.31"
   },

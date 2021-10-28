@@ -103,40 +103,68 @@ export const decodePosition = (packet: string) => {
 }
 
 
-export const decodeTagThing = (packet: string) => { //穿戴式感測器 bTag
+export const decodeTagThing = (packet: string) => { //穿戴式感測器 bTag 護身符
     const thing = packet.substr(38, 16);
     const thingBinaryString = getBinaryString(thing);
 
     const voltagePercentageBinary = thingBinaryString.substr(8, 8);
     let voltagePercentage = parseInt(voltagePercentageBinary, 2).toString() + "%"
+    //舊版
+    // const noMoveBinary = thingBinaryString.substr(23, 1);
+    // let noMove
+    // if (noMoveBinary == "1") {
+    //     noMove = true;
+    // } else {
+    //     noMove = false;
+    // }
 
-    const noMoveBinary = thingBinaryString.substr(23, 1);
-    let noMove
-    if (noMoveBinary == "1") {
-        noMove = true;
-    } else {
-        noMove = false;
+    // const falldownBinary = thingBinaryString.substr(31, 1);
+    // let falldown
+    // if (falldownBinary == "1") {
+    //     falldown = true;
+    // } else {
+    //     falldown = false;
+    // }
+
+    // const falldownStatusBinary = thingBinaryString.substr(39, 1);
+    // let falldownStatus
+    // if (falldownStatusBinary == "1") {
+    //     falldownStatus = true;
+    // } else {
+    //     falldownStatus = false;
+    // }
+    //新版
+    const status = thing.substr(12,2)//48~55
+    let Status
+    switch (status){
+        case "00" :
+            
+            Status = "Original"
+            break;
+        case "01" :
+           
+            Status = "sitting"
+            break;
+        case "02" :
+            
+            Status = "standing"
+            break;
+        case "03" :
+            
+            Status = "walking"
+            break;
+        case "04" :
+           
+            Status = "falldown"
+            break;
+            
+
     }
+        
 
-    const falldownBinary = thingBinaryString.substr(31, 1);
-    let falldown
-    if (falldownBinary == "1") {
-        falldown = true;
-    } else {
-        falldown = false;
-    }
-
-    const falldownStatusBinary = thingBinaryString.substr(39, 1);
-    let falldownStatus
-    if (falldownStatusBinary == "1") {
-        falldownStatus = true;
-    } else {
-        falldownStatus = false;
-    }
-
-    console.log("thing:", thingBinaryString)
-    console.log("decodeTagThing : ", { voltagePercentage, noMove, falldown, falldownStatus })
-    return { voltagePercentage, noMove, falldown, falldownStatus };
+    //console.log("thing:", thingBinaryString)
+    console.log("decodeTagThing : ", { voltagePercentage,Status })
+    return { voltagePercentage, Status};
 }
 
 export const decodePhysiologicalThing = (packet: string) => { //近接式感測器 bTag 生理資訊手環

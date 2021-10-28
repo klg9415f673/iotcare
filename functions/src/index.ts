@@ -20,6 +20,7 @@ export const CreateAccount = synchronous.createAccount;
 export const FloorImg = synchronous.floorImage;
 export const PeopleReport = synchronous.peopleReport;
 //export const SmokeSchedule = iot.smokeSchedule;
+export const linenotify = iot.linenotify;
 export const SensorDuration = iot.sensorDuration;
 // export const TagMovement = iot.tagMovement;
 export const TagProcess = iot.tagProcess;

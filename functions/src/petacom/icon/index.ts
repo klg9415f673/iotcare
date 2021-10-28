@@ -2,6 +2,17 @@ export const iconUrl = (type: string, status?: string) => {
     console.log("icon URL : ", type, status)
     let icon: string;
     switch (type) {
+        case '溫濕度感測器':
+            switch (status) {
+                case 'on':
+                    icon = 'assets/TemperatureAndHumiditysensor.png';
+                    break;
+
+                case 'off':
+                    icon = 'assets/TemperatureAndHumiditysensor.png';
+                    break;
+            }
+            break;
         case 'Node':
             switch (status) {
                 case '離線':
@@ -274,17 +285,7 @@ export const iconUrl = (type: string, status?: string) => {
             icon = '';
             break;
 
-        case '溫濕度感測器':
-            switch (status) {
-                case 'on':
-                    icon = 'assets/TemperatureAndHumiditysensor.png';
-                    break;
-
-                case 'off':
-                    icon = 'assets/TemperatureAndHumiditysensor.png';
-                    break;
-            }
-            break;
+     
 
         default:
             icon = 'undefined';
